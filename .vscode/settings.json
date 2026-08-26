@@ -1,0 +1,11 @@
+{
+    "idf.currentSetup": "/Users/willema/.espressif/v6.0.2/esp-idf",
+    "idf.port": "/dev/tty.usbserial-1430",
+    "chat.tools.terminal.autoApprove": {
+        "idf.py": true,
+        "/^source \"\\$HOME/\\.espressif/tools/activate_idf_v6\\.0\\.2\\.sh\" >/dev/null 2>&1 && idf\\.py -C examples/basic build$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

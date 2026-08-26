@@ -1,0 +1,7 @@
+dependencies:
+  idf: ">=5.2,<7.0"
+  espressif/mdns: "^1.11.3"
+  ftp_server:
+    path: ../../../components/ftp_server
+  joltwallet/littlefs: "^1.20.4"
+  michmich/esp-idf-wifi-provisioner: "^0.4.0"

@@ -1,0 +1,58 @@
+dependencies:
+  espressif/mdns:
+    component_hash: e81ca7a7f53ea34e78274df054da692c272e1315572876b237b1748e267c013b
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.11.3
+  ftp_server:
+    dependencies:
+    - name: idf
+      version: '>=5.2,<7.0'
+    source:
+      path: ../../components/ftp_server
+      type: local
+    version: 0.1.0
+  idf:
+    source:
+      type: idf
+    version: 6.0.2
+  joltwallet/littlefs:
+    component_hash: 3af20a3d75c49db9dc2286fd50862c34055c9f578419ad1f2bf7ed3ed01391fe
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.22.3
+  michmich/esp-idf-wifi-provisioner:
+    component_hash: 4097d69b49e4781f951ceb80e2966daebc2dd47794c306059797abf4c9ecf1f1
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    targets:
+    - esp32
+    - esp32s2
+    - esp32s3
+    - esp32c3
+    - esp32c6
+    version: 0.4.0
+direct_dependencies:
+- espressif/mdns
+- ftp_server
+- idf
+- joltwallet/littlefs
+- michmich/esp-idf-wifi-provisioner
+manifest_hash: e2cfe5b7669894ce4f45b8735dc62ad5aab60b9d566f485d023e073de45ce2f3
+target: esp32
+version: 3.0.0

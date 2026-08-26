@@ -1,0 +1,5 @@
+version: "0.1.0"
+description: "Reusable FTP server for an already-mounted ESP-IDF VFS filesystem"
+license: "MIT"
+dependencies:
+  idf: ">=5.2,<7.0"

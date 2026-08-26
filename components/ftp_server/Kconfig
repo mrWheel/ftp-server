@@ -1,0 +1,30 @@
+menu "FTP server component"
+
+choice FTP_SERVER_LOG_LEVEL
+    prompt "FTP server log level"
+    default FTP_SERVER_LOG_LEVEL_INFO
+
+config FTP_SERVER_LOG_LEVEL_NONE
+    bool "None"
+config FTP_SERVER_LOG_LEVEL_ERROR
+    bool "Error"
+config FTP_SERVER_LOG_LEVEL_WARN
+    bool "Warning"
+config FTP_SERVER_LOG_LEVEL_INFO
+    bool "Info"
+config FTP_SERVER_LOG_LEVEL_DEBUG
+    bool "Debug"
+config FTP_SERVER_LOG_LEVEL_VERBOSE
+    bool "Verbose"
+endchoice
+
+config FTP_SERVER_LOG_LEVEL_VALUE
+    int
+    default 0 if FTP_SERVER_LOG_LEVEL_NONE
+    default 1 if FTP_SERVER_LOG_LEVEL_ERROR
+    default 2 if FTP_SERVER_LOG_LEVEL_WARN
+    default 3 if FTP_SERVER_LOG_LEVEL_INFO
+    default 4 if FTP_SERVER_LOG_LEVEL_DEBUG
+    default 5 if FTP_SERVER_LOG_LEVEL_VERBOSE
+
+endmenu

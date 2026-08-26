@@ -1,0 +1,23 @@
+menu "FTP server example"
+choice APP_FILESYSTEM
+    prompt "Storage filesystem"
+    default APP_FILESYSTEM_LITTLEFS
+config APP_FILESYSTEM_LITTLEFS
+    bool "LittleFS"
+config APP_FILESYSTEM_FATFS
+    bool "FATFS with wear levelling"
+endchoice
+config APP_FTP_USER
+    string "FTP username"
+    default "esp32"
+config APP_FTP_PASSWORD
+    string "FTP password"
+    default "esp32"
+config APP_FTP_PORT
+    int "FTP control port"
+    range 1 65535
+    default 21
+config APP_DEVICE_HOSTNAME
+    string "Device hostname"
+    default "ftp-server"
+endmenu
