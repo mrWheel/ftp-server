@@ -1,11 +1,24 @@
 {
-    "idf.currentSetup": "/Users/willema/.espressif/v6.0.2/esp-idf",
-    "idf.port": "/dev/tty.usbserial-1430",
-    "chat.tools.terminal.autoApprove": {
-        "idf.py": true,
-        "/^source \"\\$HOME/\\.espressif/tools/activate_idf_v6\\.0\\.2\\.sh\" >/dev/null 2>&1 && idf\\.py -C examples/basic build$/": {
-            "approve": true,
-            "matchCommandLine": true
-        }
+  "idf.currentSetup": "/Users/willema/.espressif/v6.0.2/esp-idf",
+  "idf.port": "/dev/tty.usbserial-1430",
+  "idf.buildPath": "${workspaceFolder}/examples/basic/build",
+  "idf.sdkconfigFilePath": "${workspaceFolder}/examples/basic/sdkconfig",
+  "chat.tools.terminal.autoApprove": {
+    "idf.py": true,
+    "/^source \"\\$HOME/\\.espressif/tools/activate_idf_v6\\.0\\.2\\.sh\" >/dev/null 2>&1 && idf\\.py -C examples/basic build$/": {
+        "approve": true,
+        "matchCommandLine": true
+    },
+    "make": true,
+    "/^python3 -m unittest discover -s tests/integration -p 'test_\\*\\.py' 2>&1 \\| tail -25$/": {
+        "approve": true,
+        "matchCommandLine": true
     }
+},
+  "clangd.path": "/Users/willema/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/Users/willema/Documents/espidfProjects.nosync/ftp-server/examples/basic/build"
+  ]
 }

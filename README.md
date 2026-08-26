@@ -14,8 +14,8 @@ idf.py flash monitor
 ```
 
 On first boot, join `FTP-Server-Setup` and use the captive portal. Then connect
-with FileZilla to `ftp-server.local`, passive mode, username `esp32`, password
-`esp32`. Change credentials and ports in `idf.py menuconfig`.
+with FileZilla to `ftp-server.local` in passive mode. The server does not
+require a username or password.
 
 ## Switch to FATFS
 

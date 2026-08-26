@@ -7,12 +7,6 @@ config EXAMPLE_FILESYSTEM_LITTLEFS
 config EXAMPLE_FILESYSTEM_FATFS
     bool "FATFS with wear levelling"
 endchoice
-config EXAMPLE_FTP_USER
-    string "FTP username"
-    default "esp32"
-config EXAMPLE_FTP_PASSWORD
-    string "FTP password"
-    default "esp32"
 config EXAMPLE_FTP_PORT
     int "FTP control port"
     range 1 65535

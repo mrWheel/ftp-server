@@ -27,14 +27,10 @@ idf.py -C examples/basic flash monitor
 Use `esp32s3` instead of `esp32` for an ESP32-S3.
 
 On first boot, connect to the `FTP-Server-Setup` access point and complete the
-captive portal. Afterwards connect in passive mode to `ftp-server.local` using:
+captive portal. Afterwards connect in passive mode to `ftp-server.local`; no
+username or password is required.
 
-```text
-Username: esp32
-Password: esp32
-```
-
-Credentials, hostname, filesystem and FTP port are configurable with:
+Hostname, filesystem and FTP port are configurable with:
 
 ```bash
 idf.py -C examples/basic menuconfig

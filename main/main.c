@@ -38,8 +38,6 @@ void app_main(void)
 
     ftp_server_config_t ftp = FTP_SERVER_DEFAULT_CONFIG();
     ftp.base_path = "/storage";
-    ftp.user = CONFIG_APP_FTP_USER;
-    ftp.password = CONFIG_APP_FTP_PASSWORD;
     ftp.control_port = CONFIG_APP_FTP_PORT;
     ESP_ERROR_CHECK(ftp_server_start(&ftp));
 

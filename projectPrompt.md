@@ -21,8 +21,6 @@ and calls the component:
 ```c
 ftp_server_config_t config = FTP_SERVER_DEFAULT_CONFIG();
 config.base_path = "/storage";
-config.user = "esp32";
-config.password = "esp32";
 ESP_ERROR_CHECK(ftp_server_start(&config));
 ```
 
@@ -105,9 +103,9 @@ task per session is acceptable; never create a task per command. `stop()` closes
 the listener and all eventual session resources. Failures in one client must not
 crash the server. Avoid holding filesystem locks while waiting for network I/O.
 
-Configuration includes base path, credentials, anonymous mode, control/passive
-ports, transfer-buffer size, timeouts and maximum clients. Copy all configuration
-needed after `start()`; do not depend on caller-owned temporary memory.
+Configuration includes base path, control/passive ports, transfer-buffer size,
+timeouts and maximum clients. Copy all configuration needed after `start()`; do
+not depend on caller-owned temporary memory.
 
 ## Resource and error discipline
 
@@ -188,23 +186,60 @@ all known limitations explicitly.
 - Removed the mrwheel/ota_upload dependency and service from the project.
 - Removed the unused wear-levelling handle warning from the LittleFS build.
 - Increased the FTP session task stack to prevent FileZilla-triggered overflow.
+- Kept USER/PASS as compatibility no-ops without storing credentials or requiring login.
+- Added host protocol tests for path confinement, parser framing and response formatting.
+- Added opt-in integration tests for passive transfers, interrupted uploads, repeated PASV/EPSV and concurrent clients.
+- Audited required command arguments and added explicit 501 responses for malformed values.
+- Added explicit FTP 552 reporting for storage exhaustion during transfers.
 
 ### Remaining robustness work
 
-- Remove the legacy username/password fields and USER/PASS login flow completely.
-- Add host-testable unit tests for path confinement, parser framing and response
-  formatting.
-- Add integration tests for passive transfers, zero-byte files, large files,
-  interrupted transfers, repeated PASV/EPSV and concurrent clients.
-- Audit every FTP command for malformed arguments and consistent reply codes.
-- Improve transfer error reporting, especially explicit storage-full handling
-  for ENOSPC.
 - Complete lifecycle testing for repeated start/stop, disconnects, timeouts and
   all socket, task, mutex, directory and file cleanup paths.
 - Validate the implementation with FileZilla, WinSCP, curl, lftp, Cyberduck and
   a reputable iOS/iPadOS FTP client.
 - Remove or separately resolve the unrelated global ota_manager_ext Python
   entry-point warning.
+
+### Validation record
+
+The following checks have been completed during this development session:
+
+- The ESP-IDF `examples/basic` application builds successfully with ESP-IDF
+  6.0.2 for the configured ESP32 target. The generated application binary fits
+  in the configured app partition.
+- The host protocol tests pass with `make -C tests/host test`. These cover root
+  confinement, `.`, `..`, repeated slashes, backslash rejection, command-line
+  framing, CRLF handling, multiple commands and bounded response formatting.
+- The focused hardware integration test passes with:
+  `python3 -m unittest tests.integration.test_ftp_server.FtpServerIntegrationTests.test_zero_and_large_binary_files`.
+  The last successful run completed in approximately 12 seconds.
+- The focused hardware test successfully uploaded and downloaded a 57,344-byte
+  binary file and verified its SHA-256 digest. It also verified a zero-byte
+  upload in the same run.
+- The server log confirmed `STOR` and `RETR` both completed with 57,344 bytes,
+  and no Wi-Fi disconnect occurred during the successful run.
+- Earlier failed RETR runs were traced to a Wi-Fi beacon timeout and disconnect,
+  followed by `Software caused connection abort` after 8,192 bytes. The
+  transfer loop now yields between successful socket sends. The data socket
+  timeout is directional: uploads use `SO_RCVTIMEO` and downloads use
+  `SO_SNDTIMEO`.
+- The integration test harness now uses `ftp-server.local` by default, accepts
+  `FTP_HOST` as an override, cleans only its own `copilot_test_` directories,
+  handles expected FTP 501 exceptions correctly and removes temporary files.
+
+The following checks are not yet complete or are not hardware-proven:
+
+- The complete six-test integration suite has not yet been recorded as a clean
+  run after the final RETR scheduling fix. The focused transfer test is green.
+- The final firmware scheduling fix was rebuilt and flashed manually, then
+  confirmed by the successful focused hardware test. Firmware is never flashed
+  automatically during development.
+- No client matrix validation has yet been recorded for FileZilla, WinSCP,
+  curl, lftp, Cyberduck or iOS/iPadOS clients.
+- Repeated start/stop, concurrent filesystem access, forced disconnects,
+  passive-listener timeouts and storage-full behavior still need dedicated
+  validation.
 
 ### Coding and documentation rules
 
