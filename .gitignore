@@ -6,3 +6,12 @@
 
 # macOS metadata
 .DS_Store
+.venv/
+dist/
+__pycache__/
+*.pyc
+tests/host/test_ftp_protocol
+*.log
+testLog*.txt
+fullTestLog*.txt
+*ycleLog*.txt

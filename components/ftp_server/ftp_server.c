@@ -1,3 +1,6 @@
+//-- SPDX-License-Identifier: GPL-3.0-or-later
+//-- Copyright (C) 2026 Willem Aandewiel
+
 #include "ftp_server.h"
 #include "ftp_protocol.h"
 #include <arpa/inet.h>

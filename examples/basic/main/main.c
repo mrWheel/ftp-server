@@ -1,3 +1,6 @@
+//-- SPDX-License-Identifier: GPL-3.0-or-later
+//-- Copyright (C) 2026 Willem Aandewiel
+
 #include "esp_littlefs.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"

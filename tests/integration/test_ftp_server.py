@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+#-- SPDX-License-Identifier: GPL-3.0-or-later
+#-- Copyright (C) 2026 Willem Aandewiel
+
 """Opt-in FTP integration tests for a running ESP32 FTP server."""
 
 import concurrent.futures

@@ -1,3 +1,6 @@
+#-- SPDX-License-Identifier: GPL-3.0-or-later
+#-- Copyright (C) 2026 Willem Aandewiel
+
 CC ?= cc
 CFLAGS ?= -std=c11 -Wall -Wextra -Werror -D_POSIX_C_SOURCE=200809L
 
