@@ -37,10 +37,19 @@ class FtpServerIntegrationTests(unittest.TestCase):
         except (EOFError, OSError, ftplib.Error):
             pass
         finally:
-            try:
-                self.ftp.quit()
-            except (EOFError, OSError, ftplib.Error):
-                self.ftp.close()
+            self._close_ftp(self.ftp)
+
+    @staticmethod
+    def _close_ftp(ftp):
+        try:
+            if ftp.sock is not None:
+                try:
+                    ftp.sock.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                ftp.sock.close()
+        finally:
+            ftp.close()
 
     def _remove_directory(self, path):
         self.ftp.cwd(path)
@@ -106,7 +115,7 @@ class FtpServerIntegrationTests(unittest.TestCase):
         self.assertEqual(self.ftp.size("interrupted.bin"), len(b"partial upload"))
 
     def test_concurrent_clients(self):
-        self.ftp.quit()
+        self._close_ftp(self.ftp)
         self.ftp = None
 
         def list_root(_):
@@ -116,11 +125,49 @@ class FtpServerIntegrationTests(unittest.TestCase):
                 ftp.login()
                 return ftp.nlst()
             finally:
-                ftp.quit()
+                self._close_ftp(ftp)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             results = list(executor.map(list_root, range(2)))
         self.assertEqual(len(results), 2)
+
+    def test_reconnect_after_abrupt_disconnect(self):
+        self._close_ftp(self.ftp)
+        self.ftp = None
+
+        for _ in range(10):
+            ftp = ftplib.FTP()
+            ftp.connect(HOST, PORT, timeout=10)
+            ftp.login()
+            self.assertIn(ftp.sendcmd("PASV")[:3], ("227", "229"))
+            self._close_ftp(ftp)
+            time.sleep(0.2)
+
+        ftp = ftplib.FTP()
+        try:
+            ftp.connect(HOST, PORT, timeout=10)
+            ftp.login()
+            self.assertEqual(ftp.voidcmd("NOOP")[:3], "200")
+        finally:
+            self._close_ftp(ftp)
+
+    def test_stop_start_restart_hook(self):
+        self.ftp.sendcmd("XTEST RESTART")
+        self._close_ftp(self.ftp)
+        self.ftp = None
+
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            ftp = ftplib.FTP()
+            try:
+                ftp.connect(HOST, PORT, timeout=2)
+                ftp.login()
+                self.assertEqual(ftp.voidcmd("NOOP")[:3], "200")
+                return
+            except (ConnectionRefusedError, ConnectionResetError, TimeoutError, OSError, ftplib.Error):
+                self._close_ftp(ftp)
+                time.sleep(0.2)
+        self.fail("FTP server did not restart within 10 seconds")
 
 
 if __name__ == "__main__":

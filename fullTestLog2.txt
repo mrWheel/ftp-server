@@ -1,0 +1,100 @@
+I (77241) ftp_server: MKD /storage/copilot_test_31374_1787826073794665000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (87851) ftp_server: RMD /storage/copilot_test_31374_1787826073794665000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (87921) ftp_server: MKD /storage/copilot_test_31374_1787826084322150000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (88001) ftp_server: MKD /storage/copilot_test_31374_1787826084322150000/newDirectory succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (88071) ftp_server: STOR /storage/copilot_test_31374_1787826084322150000/newDirectory/sample.bin waiting for data connection
+I (88081) ftp_server: STOR /storage/copilot_test_31374_1787826084322150000/newDirectory/sample.bin data connection opened
+I (88081) ftp_server: STOR /storage/copilot_test_31374_1787826084322150000/newDirectory/sample.bin data stream ended after 0 bytes; syncing
+I (88111) ftp_server: STOR /storage/copilot_test_31374_1787826084322150000/newDirectory/sample.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (88211) ftp_server: RNFR /storage/copilot_test_31374_1787826084322150000/newDirectory/sample.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (88261) ftp_server: RNTO /storage/copilot_test_31374_1787826084322150000/newDirectory/renamed.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (88311) ftp_server: DELE /storage/copilot_test_31374_1787826084322150000/newDirectory/renamed.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (88371) ftp_server: RMD /storage/copilot_test_31374_1787826084322150000/newDirectory succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (88511) ftp_server: RMD /storage/copilot_test_31374_1787826084322150000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (93731) ftp_server: MKD /storage/copilot_test_31374_1787826090314034000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (93811) ftp_server: STOR /storage/copilot_test_31374_1787826090314034000/interrupted.bin waiting for data connection
+I (93821) ftp_server: STOR /storage/copilot_test_31374_1787826090314034000/interrupted.bin data connection opened
+I (93821) ftp_server: STOR /storage/copilot_test_31374_1787826090314034000/interrupted.bin data stream ended after 14 bytes; syncing
+I (93851) ftp_server: STOR /storage/copilot_test_31374_1787826090314034000/interrupted.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (94031) ftp_server: DELE /storage/copilot_test_31374_1787826090314034000/interrupted.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (94091) ftp_server: RMD /storage/copilot_test_31374_1787826090314034000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (99371) ftp_server: MKD /storage/copilot_test_31374_1787826095889893000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (99631) ftp_server: RMD /storage/copilot_test_31374_1787826095889893000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (104911) ftp_server: MKD /storage/copilot_test_31374_1787826101428215000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (105151) ftp_server: RMD /storage/copilot_test_31374_1787826101428215000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (110371) ftp_server: MKD /storage/copilot_test_31374_1787826106951829000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (110441) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/zero.bin waiting for data connection
+I (110451) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/zero.bin data connection opened
+I (110451) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/zero.bin data stream ended after 0 bytes; syncing
+I (110491) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/zero.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (110561) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/large.bin waiting for data connection
+I (110571) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/large.bin data connection opened
+I (111321) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/large.bin data stream ended after 57344 bytes; syncing
+I (111361) ftp_server: STOR /storage/copilot_test_31374_1787826106951829000/large.bin succeeded; storage: total=2 MB, used=86 KB, free=2 MB
+I (111401) ftp_server: RETR /storage/copilot_test_31374_1787826106951829000/large.bin waiting for data connection
+I (111421) ftp_server: RETR /storage/copilot_test_31374_1787826106951829000/large.bin data connection opened
+I (111571) ftp_server: RETR /storage/copilot_test_31374_1787826106951829000/large.bin data stream ended after 57344 bytes; syncing
+I (111601) ftp_server: RETR /storage/copilot_test_31374_1787826106951829000/large.bin succeeded; storage: total=2 MB, used=86 KB, free=2 MB
+I (111771) ftp_server: DELE /storage/copilot_test_31374_1787826106951829000/large.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (111831) ftp_server: DELE /storage/copilot_test_31374_1787826106951829000/zero.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (111881) ftp_server: RMD /storage/copilot_test_31374_1787826106951829000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+W (116301) ftp_server: Unsupported FTP command: AUTH
+W (116311) ftp_server: Unsupported FTP command: AUTH
+I (311911) ftp_server: STOR /storage/test2.txt waiting for data connection
+I (311921) ftp_server: STOR /storage/test2.txt data connection opened
+I (311921) ftp_server: STOR /storage/test2.txt data stream ended after 0 bytes; syncing
+I (311951) ftp_server: STOR /storage/test2.txt succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+W (438781) ftp_server: Unsupported FTP command: AUTH
+W (438801) ftp_server: Unsupported FTP command: AUTH
+I (450261) ftp_server: STOR /storage/NewMap/newMapFile.txt waiting for data connection
+I (450271) ftp_server: STOR /storage/NewMap/newMapFile.txt data connection opened
+I (450271) ftp_server: STOR /storage/NewMap/newMapFile.txt data stream ended after 0 bytes; syncing
+I (450301) ftp_server: STOR /storage/NewMap/newMapFile.txt succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (462551) ftp_server: STOR /storage/NewMap/andAnOther.txt waiting for data connection
+I (462561) ftp_server: STOR /storage/NewMap/andAnOther.txt data connection opened
+I (462561) ftp_server: STOR /storage/NewMap/andAnOther.txt data stream ended after 0 bytes; syncing
+I (462591) ftp_server: STOR /storage/NewMap/andAnOther.txt succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (519511) ftp_server: MKD /storage/copilot_test_31517_1787826516061681000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (530071) ftp_server: RMD /storage/copilot_test_31517_1787826516061681000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (530231) ftp_server: MKD /storage/copilot_test_31517_1787826526484402000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (530321) ftp_server: MKD /storage/copilot_test_31517_1787826526484402000/newDirectory succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (530401) ftp_server: STOR /storage/copilot_test_31517_1787826526484402000/newDirectory/sample.bin waiting for data connection
+I (530411) ftp_server: STOR /storage/copilot_test_31517_1787826526484402000/newDirectory/sample.bin data connection opened
+I (530411) ftp_server: STOR /storage/copilot_test_31517_1787826526484402000/newDirectory/sample.bin data stream ended after 0 bytes; syncing
+I (530431) ftp_server: STOR /storage/copilot_test_31517_1787826526484402000/newDirectory/sample.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (530511) ftp_server: RNFR /storage/copilot_test_31517_1787826526484402000/newDirectory/sample.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (530541) ftp_server: RNTO /storage/copilot_test_31517_1787826526484402000/newDirectory/renamed.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (530581) ftp_server: DELE /storage/copilot_test_31517_1787826526484402000/newDirectory/renamed.bin succeeded; storage: total=2 MB, used=32 KB, free=2 MB
+I (530631) ftp_server: RMD /storage/copilot_test_31517_1787826526484402000/newDirectory succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (530781) ftp_server: RMD /storage/copilot_test_31517_1787826526484402000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (536021) ftp_server: MKD /storage/copilot_test_31517_1787826532574312000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (536081) ftp_server: STOR /storage/copilot_test_31517_1787826532574312000/interrupted.bin waiting for data connection
+I (536091) ftp_server: STOR /storage/copilot_test_31517_1787826532574312000/interrupted.bin data connection opened
+I (536091) ftp_server: STOR /storage/copilot_test_31517_1787826532574312000/interrupted.bin data stream ended after 14 bytes; syncing
+I (536111) ftp_server: STOR /storage/copilot_test_31517_1787826532574312000/interrupted.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (536241) ftp_server: STOR /storage/NewMap/3eBastand.txt waiting for data connection
+I (536251) ftp_server: STOR /storage/NewMap/3eBastand.txt data connection opened
+I (536251) ftp_server: STOR /storage/NewMap/3eBastand.txt data stream ended after 0 bytes; syncing
+I (536271) ftp_server: STOR /storage/NewMap/3eBastand.txt succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (536301) ftp_server: DELE /storage/copilot_test_31517_1787826532574312000/interrupted.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (536351) ftp_server: RMD /storage/copilot_test_31517_1787826532574312000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (541581) ftp_server: MKD /storage/copilot_test_31517_1787826538165220000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (541811) ftp_server: RMD /storage/copilot_test_31517_1787826538165220000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (547011) ftp_server: MKD /storage/copilot_test_31517_1787826543612054000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (547231) ftp_server: RMD /storage/copilot_test_31517_1787826543612054000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB
+I (552501) ftp_server: MKD /storage/copilot_test_31517_1787826549038732000 succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (552591) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/zero.bin waiting for data connection
+I (552601) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/zero.bin data connection opened
+I (552601) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/zero.bin data stream ended after 0 bytes; syncing
+I (552631) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/zero.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (552701) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/large.bin waiting for data connection
+I (552711) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/large.bin data connection opened
+I (553441) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/large.bin data stream ended after 57344 bytes; syncing
+I (553471) ftp_server: STOR /storage/copilot_test_31517_1787826549038732000/large.bin succeeded; storage: total=2 MB, used=86 KB, free=2 MB
+I (553521) ftp_server: RETR /storage/copilot_test_31517_1787826549038732000/large.bin waiting for data connection
+I (553531) ftp_server: RETR /storage/copilot_test_31517_1787826549038732000/large.bin data connection opened
+I (553731) ftp_server: RETR /storage/copilot_test_31517_1787826549038732000/large.bin data stream ended after 57344 bytes; syncing
+I (553751) ftp_server: RETR /storage/copilot_test_31517_1787826549038732000/large.bin succeeded; storage: total=2 MB, used=86 KB, free=2 MB
+I (553911) ftp_server: DELE /storage/copilot_test_31517_1787826549038732000/large.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (553981) ftp_server: DELE /storage/copilot_test_31517_1787826549038732000/zero.bin succeeded; storage: total=2 MB, used=24 KB, free=2 MB
+I (554041) ftp_server: RMD /storage/copilot_test_31517_1787826549038732000 succeeded; storage: total=2 MB, used=16 KB, free=2 MB

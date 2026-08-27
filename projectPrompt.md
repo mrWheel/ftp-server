@@ -137,6 +137,91 @@ At no point may a missing LittleFS timestamp turn the directory into an unusable
 `00:00 newDirectory` entry. Every operation reports success only after the POSIX
 call actually succeeds.
 
+## Manual curl compatibility check
+
+Run these commands from macOS or Linux while the ESP32 is running and reachable
+as `ftp-server.local`. They use passive FTP and do not require credentials. The
+commands create and remove one temporary directory and file below `/storage`.
+
+```bash
+export FTP_HOST=ftp-server.local
+export FTP_PORT=21
+export FTP_BASE="ftp://${FTP_HOST}:${FTP_PORT}"
+export FTP_TEST_DIR="curl_test_$$"
+printf 'curl FTP test data\n' > /tmp/ftp-curl-test.txt
+
+# Read the root and an existing directory.
+curl --fail --ftp-pasv "${FTP_BASE}/"
+curl --fail --ftp-pasv "${FTP_BASE}/NewMap/"
+
+# Create a directory, upload a file, list it and download it again.
+curl --fail --ftp-pasv --quote "MKD ${FTP_TEST_DIR}" "${FTP_BASE}/"
+curl --fail --ftp-pasv --upload-file /tmp/ftp-curl-test.txt \
+  "${FTP_BASE}/${FTP_TEST_DIR}/curl-test.txt"
+curl --fail --ftp-pasv "${FTP_BASE}/${FTP_TEST_DIR}/"
+curl --fail --ftp-pasv --output /tmp/ftp-curl-downloaded.txt \
+  "${FTP_BASE}/${FTP_TEST_DIR}/curl-test.txt"
+cmp /tmp/ftp-curl-test.txt /tmp/ftp-curl-downloaded.txt
+
+# Query metadata and verify REST download returns the file suffix.
+curl --fail --ftp-pasv --quote "SIZE /${FTP_TEST_DIR}/curl-test.txt" \
+  "${FTP_BASE}/"
+curl --fail --ftp-pasv --quote "MDTM /${FTP_TEST_DIR}/curl-test.txt" \
+  "${FTP_BASE}/"
+tail -c +6 /tmp/ftp-curl-test.txt > /tmp/ftp-curl-rest.txt
+curl --fail --ftp-pasv --range 5- --output /tmp/ftp-curl-rest-downloaded.txt \
+  "${FTP_BASE}/${FTP_TEST_DIR}/curl-test.txt"
+cmp /tmp/ftp-curl-rest.txt /tmp/ftp-curl-rest-downloaded.txt
+
+# Rename and delete the file and directory.
+curl --fail --ftp-pasv --quote "RNFR /${FTP_TEST_DIR}/curl-test.txt" \
+  --quote "RNTO /${FTP_TEST_DIR}/curl-renamed.txt" "${FTP_BASE}/"
+curl --fail --ftp-pasv --quote "DELE /${FTP_TEST_DIR}/curl-renamed.txt" \
+  "${FTP_BASE}/"
+curl --fail --ftp-pasv --quote "RMD /${FTP_TEST_DIR}" "${FTP_BASE}/"
+rm -f /tmp/ftp-curl-test.txt /tmp/ftp-curl-downloaded.txt /tmp/ftp-curl-rest.txt \
+  /tmp/ftp-curl-rest-downloaded.txt
+unset FTP_HOST FTP_PORT FTP_BASE FTP_TEST_DIR
+```
+
+Expected result: root/listing, upload, download, `SIZE`, `MDTM`, REST, rename,
+delete and cleanup all return success; `cmp` produces no output. Also verify
+that paths containing `..` never expose data outside the configured VFS root.
+Use `curl --ftp-pasv`; active-mode `PORT` is intentionally not supported.
+
+## Repeatable concurrent test program
+
+For repeatable workflow testing, use `tests/ftp_stress.py`. It creates a unique
+directory per iteration, uses passive FTP, verifies upload/download checksums,
+checks `NLST` and `SIZE`, renames and deletes the file, and removes its own
+directory. Connection retries handle the configured two-client limit, so the
+program can be started from multiple terminal windows at the same time.
+
+From the project root:
+
+```bash
+python3 tests/ftp_stress.py --iterations 10
+```
+
+Useful variants:
+
+```bash
+# Run 100 iterations with a short pause between iterations.
+python3 tests/ftp_stress.py --iterations 100 --pause 0.2
+
+# Run against an IP address instead of mDNS.
+FTP_HOST=192.168.12.2 python3 tests/ftp_stress.py --iterations 10
+
+# Keep remote test directories for post-run inspection.
+python3 tests/ftp_stress.py --iterations 3 --keep
+```
+
+To run from multiple terminal windows, start the same command in each window.
+Every process uses unique names. A `FAIL` line identifies the iteration and
+remote directory; temporary `421 Too many clients` responses are retried for
+longer so FileBrowser or another stress process can briefly occupy a client
+slot. The final exit status is nonzero if any iteration fails after retries.
+
 ## Tests
 
 Add host-testable unit tests for path normalization/root confinement and parser
@@ -191,15 +276,33 @@ all known limitations explicitly.
 - Added opt-in integration tests for passive transfers, interrupted uploads, repeated PASV/EPSV and concurrent clients.
 - Audited required command arguments and added explicit 501 responses for malformed values.
 - Added explicit FTP 552 reporting for storage exhaustion during transfers.
+- Added menuconfig control for the maximum number of simultaneous FTP clients,
+  defaulting to four in the examples.
+- Added active-session tracking so shutdown can close existing control and
+  passive sockets instead of waiting for normal client timeouts.
+- Added and passed an automated reconnect lifecycle test covering ten abrupt
+  disconnects with passive listeners followed by a successful new connection.
+- Added an opt-in `XTEST RESTART` hook in the basic test build to exercise a
+  real `ftp_server_stop()` followed by `ftp_server_start()` without enabling
+  test control in production builds.
+- Passed the automated `XTEST RESTART` lifecycle test on hardware; the server
+  stopped, released active resources and served a new connection afterwards.
+- Fixed integration-test socket cleanup so lifecycle validation completes
+  without Python `ResourceWarning` messages.
+- Added a repeatable `tests/ftp_stress.py` workflow for concurrent terminal
+  runs, with unique remote directories, checksum verification, retry handling
+  for temporary `421` client-limit responses and automatic cleanup.
+- Fixed the stress harness to rewind upload files before sending them and to
+  verify the remote file size before downloading.
 
-### Remaining robustness work
+### Remaining external validation
 
-- Complete lifecycle testing for repeated start/stop, disconnects, timeouts and
-  all socket, task, mutex, directory and file cleanup paths.
-- Validate the implementation with FileZilla, WinSCP, curl, lftp, Cyberduck and
-  a reputable iOS/iPadOS FTP client.
-- Remove or separately resolve the unrelated global ota_manager_ext Python
-  entry-point warning.
+- No known implementation robustness blocker remains for the tested workflows.
+- Additional client-matrix validation with WinSCP, lftp, Cyberduck and another
+  iOS/iPadOS FTP client remains useful, but is external compatibility coverage
+  rather than an unresolved server defect.
+- The unrelated global `ota_manager_ext` Python entry-point warning remains
+  outside this project scope.
 
 ### Validation record
 
@@ -219,6 +322,17 @@ The following checks have been completed during this development session:
   upload in the same run.
 - The server log confirmed `STOR` and `RETR` both completed with 57,344 bytes,
   and no Wi-Fi disconnect occurred during the successful run.
+- The complete six-test hardware integration suite passed in approximately
+  40 seconds with `Ran 6 tests ... OK`.
+- The hardware lifecycle test passed in approximately 11 seconds, including a
+  real stop/start and a successful new connection. Ten abrupt disconnects with
+  passive listeners also passed without exhausting client slots.
+- FileZilla and FileBrowser were used successfully for directory creation,
+  uploads and directory browsing. curl successfully listed both the FTP root
+  and `/NewMap/`.
+- Two concurrent stress-test processes completed ten iterations each. A longer
+  run correctly waited while FileBrowser occupied the configured client slots
+  and resumed after FileBrowser disconnected.
 - Earlier failed RETR runs were traced to a Wi-Fi beacon timeout and disconnect,
   followed by `Software caused connection abort` after 8,192 bytes. The
   transfer loop now yields between successful socket sends. The data socket
@@ -230,16 +344,16 @@ The following checks have been completed during this development session:
 
 The following checks are not yet complete or are not hardware-proven:
 
-- The complete six-test integration suite has not yet been recorded as a clean
-  run after the final RETR scheduling fix. The focused transfer test is green.
+- The complete six-test integration suite is green after the final RETR
+  scheduling fix: `Ran 6 tests in 40.069s`, `OK`.
 - The final firmware scheduling fix was rebuilt and flashed manually, then
   confirmed by the successful focused hardware test. Firmware is never flashed
   automatically during development.
 - No client matrix validation has yet been recorded for FileZilla, WinSCP,
   curl, lftp, Cyberduck or iOS/iPadOS clients.
-- Repeated start/stop, concurrent filesystem access, forced disconnects,
-  passive-listener timeouts and storage-full behavior still need dedicated
-  validation.
+- Multiple stop/start cycles, passive-listener timeout behavior and explicit
+  storage-full behavior remain possible extensions to the test suite, but are
+  not currently blocking the validated FTP workflows.
 
 ### Coding and documentation rules
 

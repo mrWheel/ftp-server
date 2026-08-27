@@ -26,13 +26,15 @@
 #define FTP_TAG "ftp_server"
 
 typedef struct { char base[FTP_PATH_MAX]; uint16_t port, pmin, pmax, next_port; size_t bufsize, max_clients; uint32_t ctimeout, dtimeout; } server_cfg_t;
-typedef struct { int ctrl, pasv; char cwd[FTP_PATH_MAX], rename_from[FTP_PATH_MAX]; off_t rest; } session_t;
+typedef struct session_t { int ctrl, pasv; char cwd[FTP_PATH_MAX], rename_from[FTP_PATH_MAX]; off_t rest; struct session_t *next; } session_t;
 static server_cfg_t g;
 static volatile bool running;
 static int listen_fd=-1;
 static TaskHandle_t server_task;
 static SemaphoreHandle_t lock;
 static size_t clients;
+static session_t *sessions;
+static TaskHandle_t restart_task;
 
 extern esp_err_t esp_littlefs_info(const char *partition_label,
 								   size_t *total_bytes,
@@ -233,6 +235,32 @@ static int transfer(session_t*s,const char*arg,bool upload)
 							 !ok && transfer_errno == ENOSPC ? "Storage allocation failed." :
 							 (ok ? "Transfer complete." : "Transfer aborted."));
 }
+#if CONFIG_FTP_SERVER_ENABLE_TEST_HOOK
+static void restart_task_fn(void *arg)
+{
+	(void)arg;
+	char base_path[FTP_PATH_MAX];
+	snprintf(base_path, sizeof(base_path), "%s", g.base);
+	ftp_server_config_t config = FTP_SERVER_DEFAULT_CONFIG();
+	config.base_path = base_path;
+	config.control_port = g.port;
+	config.passive_port_min = g.pmin;
+	config.passive_port_max = g.pmax;
+	config.transfer_buffer_size = g.bufsize;
+	config.control_timeout_ms = g.ctimeout;
+	config.data_timeout_ms = g.dtimeout;
+	config.max_clients = g.max_clients;
+	if (ftp_server_stop() != ESP_OK)
+	{
+		restart_task = NULL;
+		vTaskDelete(NULL);
+		return;
+	}
+	restart_task = NULL;
+	ftp_server_start(&config);
+	vTaskDelete(NULL);
+}
+#endif
 static bool command(session_t*s,char*line){char*arg=strchr(line,' ');if(arg){*arg++=0;while(*arg==' ')arg++;}else arg="";for(char*p=line;*p;p++)*p=toupper((unsigned char)*p);if((!strcmp(line,"CWD")||!strcmp(line,"RETR")||!strcmp(line,"STOR")||!strcmp(line,"SIZE")||!strcmp(line,"MDTM")||!strcmp(line,"MKD")||!strcmp(line,"XMKD")||!strcmp(line,"RMD")||!strcmp(line,"XRMD")||!strcmp(line,"DELE")||!strcmp(line,"RNFR")||!strcmp(line,"RNTO"))&&!arg[0]){reply(s,501,"Argument required.");return true;}char v[FTP_PATH_MAX],p[FTP_PATH_MAX];p[0]=0;struct stat st;
  if(!strcmp(line,"USER")||!strcmp(line,"PASS"))reply(s,230,"Login not required.");
  else if(!strcmp(line,"SYST"))reply(s,215,"UNIX Type: L8");
@@ -255,12 +283,15 @@ static bool command(session_t*s,char*line){char*arg=strchr(line,' ');if(arg){*ar
  else if(!strcmp(line,"OPTS")&&!strcasecmp(arg,"UTF8 ON"))reply(s,200,"UTF8 enabled.");
  else if(!strcmp(line,"OPTS"))reply(s,501,"Unsupported option.");
  else if(!strcmp(line,"ABOR")){closefd(&s->pasv);reply(s,226,"Abort successful.");}
+#if CONFIG_FTP_SERVER_ENABLE_TEST_HOOK
+ else if(!strcasecmp(line,"XTEST")&&!strcasecmp(arg,"RESTART")){if(restart_task||xTaskCreate(restart_task_fn,"ftp_restart",4096,NULL,5,&restart_task)!=pdPASS)reply(s,451,"Restart unavailable.");else reply(s,200,"Restart scheduled.");}
+#endif
  else if(!strcmp(line,"NOOP"))reply(s,200,"OK.");
  else if(!strcmp(line,"QUIT")){reply(s,221,"Goodbye.");return false;}
- else reply(s,502,"Command not implemented.");
+ else{ESP_LOGW(FTP_TAG,"Unsupported FTP command: %s",line);reply(s,502,"Command not implemented.");}
  return true;}
-static void session_task(void*arg){session_t*s=arg;reply(s,220,"ESP32 FTP server ready.");char line[FTP_LINE_MAX];size_t used=0;bool stay=true;while(running&&stay){char c;ssize_t n=recv(s->ctrl,&c,1,0);if(n<=0)break;bool complete=false,overflow=false;ftp_parser_feed(line,&used,c,&complete,&overflow);if(overflow){reply(s,500,"Command line too long.");continue;}if(complete){if(used)stay=command(s,line);used=0;}}closefd(&s->pasv);closefd(&s->ctrl);free(s);xSemaphoreTake(lock,portMAX_DELAY);clients--;xSemaphoreGive(lock);vTaskDelete(NULL);}
-static void accept_task(void*arg){(void)arg;while(running){int fd=accept(listen_fd,NULL,NULL);if(fd<0){if(running)vTaskDelay(pdMS_TO_TICKS(50));continue;}xSemaphoreTake(lock,portMAX_DELAY);bool room=clients<g.max_clients;if(room)clients++;xSemaphoreGive(lock);if(!room){send_all(fd,"421 Too many clients.\r\n",23);close(fd);continue;}session_t*s=calloc(1,sizeof(*s));if(!s){close(fd);continue;}s->ctrl=fd;s->pasv=-1;strcpy(s->cwd,"/");timeout_fd(fd,g.ctimeout);if(xTaskCreate(session_task,"ftp_session",12288,s,5,NULL)!=pdPASS){close(fd);free(s);xSemaphoreTake(lock,portMAX_DELAY);clients--;xSemaphoreGive(lock);}}server_task=NULL;vTaskDelete(NULL);}
-esp_err_t ftp_server_start(const ftp_server_config_t*c){if(running)return ESP_ERR_INVALID_STATE;if(!c||!c->base_path||c->passive_port_min>c->passive_port_max||!c->max_clients)return ESP_ERR_INVALID_ARG;struct stat st;if(stat(c->base_path,&st)||!S_ISDIR(st.st_mode))return ESP_ERR_NOT_FOUND;memset(&g,0,sizeof(g));snprintf(g.base,sizeof(g.base),"%s",c->base_path);g.port=c->control_port;g.pmin=c->passive_port_min;g.pmax=c->passive_port_max;g.next_port=g.pmin;g.bufsize=c->transfer_buffer_size?c->transfer_buffer_size:4096;g.max_clients=c->max_clients;g.ctimeout=c->control_timeout_ms;g.dtimeout=c->data_timeout_ms;esp_log_level_set(FTP_TAG,(esp_log_level_t)CONFIG_FTP_SERVER_LOG_LEVEL_VALUE);lock=xSemaphoreCreateMutex();if(!lock)return ESP_ERR_NO_MEM;listen_fd=socket(AF_INET,SOCK_STREAM,IPPROTO_IP);if(listen_fd<0){vSemaphoreDelete(lock);lock=NULL;return ESP_FAIL;}int one=1;setsockopt(listen_fd,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(one));struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(g.port),.sin_addr.s_addr=INADDR_ANY};if(bind(listen_fd,(void*)&a,sizeof(a))||listen(listen_fd,g.max_clients)){closefd(&listen_fd);vSemaphoreDelete(lock);lock=NULL;return ESP_FAIL;}running=true;if(xTaskCreate(accept_task,"ftp_server",4096,NULL,5,&server_task)!=pdPASS){running=false;closefd(&listen_fd);vSemaphoreDelete(lock);lock=NULL;return ESP_ERR_NO_MEM;}ESP_LOGI(FTP_TAG,"Serving %s on port %u",g.base,g.port);storage_report("START",g.base,0);return ESP_OK;}
-esp_err_t ftp_server_stop(void){if(!running)return ESP_ERR_INVALID_STATE;running=false;closefd(&listen_fd);for(int i=0;i<100&&server_task;i++)vTaskDelay(pdMS_TO_TICKS(10));return ESP_OK;}
+static void session_task(void*arg){session_t*s=arg;reply(s,220,"ESP32 FTP server ready.");char line[FTP_LINE_MAX];size_t used=0;bool stay=true;while(running&&stay){char c;ssize_t n=recv(s->ctrl,&c,1,0);if(n<=0)break;bool complete=false,overflow=false;ftp_parser_feed(line,&used,c,&complete,&overflow);if(overflow){reply(s,500,"Command line too long.");continue;}if(complete){if(used)stay=command(s,line);used=0;}}closefd(&s->pasv);closefd(&s->ctrl);xSemaphoreTake(lock,portMAX_DELAY);session_t **current=&sessions;while(*current&&*current!=s)current=&(*current)->next;if(*current==s)*current=s->next;clients--;xSemaphoreGive(lock);free(s);vTaskDelete(NULL);}
+static void accept_task(void*arg){(void)arg;while(running){int fd=accept(listen_fd,NULL,NULL);if(fd<0){if(running)vTaskDelay(pdMS_TO_TICKS(50));continue;}xSemaphoreTake(lock,portMAX_DELAY);bool room=clients<g.max_clients;if(room)clients++;xSemaphoreGive(lock);if(!room){send_all(fd,"421 Too many clients.\r\n",23);close(fd);continue;}session_t*s=calloc(1,sizeof(*s));if(!s){close(fd);xSemaphoreTake(lock,portMAX_DELAY);clients--;xSemaphoreGive(lock);continue;}s->ctrl=fd;s->pasv=-1;strcpy(s->cwd,"/");timeout_fd(fd,g.ctimeout);xSemaphoreTake(lock,portMAX_DELAY);s->next=sessions;sessions=s;xSemaphoreGive(lock);if(xTaskCreate(session_task,"ftp_session",12288,s,5,NULL)!=pdPASS){xSemaphoreTake(lock,portMAX_DELAY);sessions=s->next;clients--;xSemaphoreGive(lock);close(fd);free(s);}}server_task=NULL;vTaskDelete(NULL);}
+esp_err_t ftp_server_start(const ftp_server_config_t*c){if(running)return ESP_ERR_INVALID_STATE;if(!c||!c->base_path||c->passive_port_min>c->passive_port_max||!c->max_clients)return ESP_ERR_INVALID_ARG;struct stat st;if(stat(c->base_path,&st)||!S_ISDIR(st.st_mode))return ESP_ERR_NOT_FOUND;memset(&g,0,sizeof(g));sessions=NULL;clients=0;snprintf(g.base,sizeof(g.base),"%s",c->base_path);g.port=c->control_port;g.pmin=c->passive_port_min;g.pmax=c->passive_port_max;g.next_port=g.pmin;g.bufsize=c->transfer_buffer_size?c->transfer_buffer_size:4096;g.max_clients=c->max_clients;g.ctimeout=c->control_timeout_ms;g.dtimeout=c->data_timeout_ms;esp_log_level_set(FTP_TAG,(esp_log_level_t)CONFIG_FTP_SERVER_LOG_LEVEL_VALUE);lock=xSemaphoreCreateMutex();if(!lock)return ESP_ERR_NO_MEM;listen_fd=socket(AF_INET,SOCK_STREAM,IPPROTO_IP);if(listen_fd<0){vSemaphoreDelete(lock);lock=NULL;return ESP_FAIL;}int one=1;setsockopt(listen_fd,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(one));struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(g.port),.sin_addr.s_addr=INADDR_ANY};if(bind(listen_fd,(void*)&a,sizeof(a))||listen(listen_fd,g.max_clients)){closefd(&listen_fd);vSemaphoreDelete(lock);lock=NULL;return ESP_FAIL;}running=true;if(xTaskCreate(accept_task,"ftp_server",4096,NULL,5,&server_task)!=pdPASS){running=false;closefd(&listen_fd);vSemaphoreDelete(lock);lock=NULL;return ESP_ERR_NO_MEM;}ESP_LOGI(FTP_TAG,"Serving %s on port %u",g.base,g.port);storage_report("START",g.base,0);return ESP_OK;}
+esp_err_t ftp_server_stop(void){if(!running)return ESP_ERR_INVALID_STATE;running=false;closefd(&listen_fd);xSemaphoreTake(lock,portMAX_DELAY);for(session_t *session=sessions;session;session=session->next){closefd(&session->pasv);shutdown(session->ctrl,SHUT_RDWR);}xSemaphoreGive(lock);for(int i=0;i<100&&server_task;i++)vTaskDelay(pdMS_TO_TICKS(10));for(int i=0;i<100&&clients;i++)vTaskDelay(pdMS_TO_TICKS(10));if(clients)return ESP_ERR_TIMEOUT;vSemaphoreDelete(lock);lock=NULL;return ESP_OK;}
 bool ftp_server_is_running(void){return running;}

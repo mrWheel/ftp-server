@@ -13,6 +13,10 @@
     "/^python3 -m unittest discover -s tests/integration -p 'test_\\*\\.py' 2>&1 \\| tail -25$/": {
         "approve": true,
         "matchCommandLine": true
+    },
+    "/^source \"\\$HOME/\\.espressif/activate_idf_v6\\.0\\.2\\.sh\" >/dev/null 2>&1 && idf\\.py -C examples/basic build$/": {
+        "approve": true,
+        "matchCommandLine": true
     }
 },
   "clangd.path": "/Users/willema/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",

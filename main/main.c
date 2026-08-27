@@ -39,6 +39,7 @@ void app_main(void)
     ftp_server_config_t ftp = FTP_SERVER_DEFAULT_CONFIG();
     ftp.base_path = "/storage";
     ftp.control_port = CONFIG_APP_FTP_PORT;
+    ftp.max_clients = CONFIG_FTP_SERVER_MAX_CLIENTS;
     ESP_ERROR_CHECK(ftp_server_start(&ftp));
 
     ESP_LOGI(TAG, "FTP ready: ftp://%s.local:%d/", CONFIG_APP_DEVICE_HOSTNAME,
