@@ -268,7 +268,6 @@ all known limitations explicitly.
 - Added LittleFS and FATFS storage-statistics support, including the LittleFS
   fallback where statvfs() is not implemented.
 - Added real mDNS hostname and FTP service advertisement to the basic example.
-- Removed the mrwheel/ota_upload dependency and service from the project.
 - Removed the unused wear-levelling handle warning from the LittleFS build.
 - Increased the FTP session task stack to prevent FileZilla-triggered overflow.
 - Kept USER/PASS as compatibility no-ops without storing credentials or requiring login.
@@ -301,8 +300,6 @@ all known limitations explicitly.
 - Additional client-matrix validation with WinSCP, lftp, Cyberduck and another
   iOS/iPadOS FTP client remains useful, but is external compatibility coverage
   rather than an unresolved server defect.
-- The unrelated global `ota_manager_ext` Python entry-point warning remains
-  outside this project scope.
 
 ### Validation record
 

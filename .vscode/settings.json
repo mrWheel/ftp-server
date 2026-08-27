@@ -17,7 +17,12 @@
     "/^source \"\\$HOME/\\.espressif/activate_idf_v6\\.0\\.2\\.sh\" >/dev/null 2>&1 && idf\\.py -C examples/basic build$/": {
         "approve": true,
         "matchCommandLine": true
-    }
+    },
+    "command": true,
+    "true": true,
+    "type": true,
+    "printf": true,
+    "test": true
 },
   "clangd.path": "/Users/willema/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
   "clangd.arguments": [
